@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var expectedKeys = []string{"alibaba", "doubao", "google", "hailuo", "jimeng", "kling", "sora", "sunoapi", "vertex-ai", "vidu"}
+var expectedKeys = []string{"alibaba", "doubao", "google", "hailuo", "jimeng", "kling", "runninghub", "sora", "sunoapi", "vertex-ai", "vidu"}
 
 func TestBuiltInVendorPluginsDeclareNativeRoutesAndLegacyChannelTypes(t *testing.T) {
 	generation := jsplugin.DefaultRegistry.Generation()
@@ -134,7 +134,11 @@ func TestBuiltInTaskPluginResponsesAndUsageContracts(t *testing.T) {
 }
 
 func TestBuiltInResponsesDecodersEchoChannelMappedAlias(t *testing.T) {
-	bodyOverrides := map[string]map[string]any{}
+	// RunningHub targets a ComfyUI text node by id, so its alias body has to
+	// name the node the way a real workflow caller does.
+	bodyOverrides := map[string]map[string]any{
+		"runninghub": {"model": "alias-under-test", "input": "a cat walking on the beach", "params": map[string]any{"textNodeId": "6"}},
+	}
 	for _, key := range expectedKeys {
 		t.Run(key, func(t *testing.T) {
 			source, sourceErr := Source(key)
@@ -168,7 +172,7 @@ func TestBuiltInResponsesDecodersEchoChannelMappedAlias(t *testing.T) {
 func TestBuiltInPluginsAddressNewAPIUpstreamOnNativeRoutes(t *testing.T) {
 	generation := jsplugin.DefaultRegistry.Generation()
 	require.NotNil(t, generation)
-	for _, key := range []string{"hailuo", "google", "vidu", "vertex-ai"} {
+	for _, key := range []string{"hailuo", "google", "runninghub", "vidu", "vertex-ai"} {
 		plugin, found := generation.Get(key)
 		require.True(t, found, key)
 		assert.False(t, plugin.Meta.SupportsUpstream(jsplugin.UpstreamKindNewAPI), "%s has no native routes and must not be bindable to a New API channel", key)
